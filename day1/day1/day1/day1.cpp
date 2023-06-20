@@ -8,7 +8,6 @@
 
 int main()
 {
-	int part = 2;
 	std::ifstream input("./Input.txt");
 	if (input.fail()) {
 		std::cerr << "couldn't open file\n";
@@ -19,6 +18,9 @@ int main()
 	{
 		std::getline(input, line);
 	}
+	int part = 1;
+	std::cout << "which part ? (1 or 2)\n";
+	std::cin >> part;
 	int count = 0;
 	if (part == 1) {
 		for (std::string::const_iterator cit = line.begin(); cit != line.end(); ++cit) {

@@ -8,7 +8,29 @@
 int paperNeed(const std::string &dim) {
     int l = std::stoi(dim);
     std::string::size_type x = dim.find('x');
-    
+    int w = std::stoi(dim.substr(x + 1));
+    x = dim.find('x', x + 1);
+    int h = std::stoi(dim.substr(x + 1));
+    return (2 * (l * w) + 2 * (l * h) + 2 * (w * h) + std::min({ l * w, l * h, w * h }));
+}
+
+int ribbonNeed(const char *dim) {
+    int l = std::atoi(dim);
+    int idx = 0;
+    while (dim[idx] != 'x')
+        ++idx;
+    int w = std::atoi(&dim[++idx]);
+    while (dim[idx] != 'x')
+        ++idx;
+    int h = std::atoi(&dim[++idx]);
+    int minPerimeter = 0;
+    if (h >= l && h >= w)
+        minPerimeter = 2 * (l + w);
+    else if (l >= w)
+        minPerimeter = 2 * (h + w);
+    else
+        minPerimeter = 2 * (h + l);
+    return ((l * w * h) + minPerimeter);
 }
 
 int main()
@@ -20,12 +42,27 @@ int main()
         return 1;
     }
     std::string line;
+    int part = 1;
+    std::cout << "which part ? (1 or 2)\n";
+    std::cin >> part;
     int totalOfPaper = 0;
+    long totalOfRibbon = 0;
     while (!input.eof())
     {
         std::getline(input, line);
-        totalOfPaper += paperNeed(line);
+        if (part == 1)
+        {
+            totalOfPaper += paperNeed(line);
+        }
+        else
+        {
+            totalOfRibbon += ribbonNeed(line.c_str());
+        }
     }
+    if (part == 1)
+        std::cout << "totalOfPaper : " << totalOfPaper << std::endl;
+    else
+        std::cout << "totalOfRibbon : " << totalOfRibbon << std::endl;
     return 0;
 }
 
