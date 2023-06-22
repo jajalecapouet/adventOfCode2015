@@ -110,7 +110,7 @@ int main()
 	std::cout << "which part ? (1 or 2)\n";
 	std::cin >> part;
 	std::string line;
-	niceStringChecker tool(2);
+	niceStringChecker tool(part);
 	int count = 0;
 	while (!input.eof()) {
 		std::getline(input, line);
