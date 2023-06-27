@@ -8,14 +8,6 @@
 #include <map>
 #include <set>
 
-#define LEAF 0
-#define AND 1
-#define OR 2
-#define LSHIFT 3
-#define RSHIFT 4
-#define NOT 5
-#define EQUAL 6
-
 typedef struct Content {
 	std::string lhs;
 	unsigned short lhsVal;
