@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <set>
 
 #define LEAF 0
 #define AND 1
@@ -17,142 +18,32 @@
 
 typedef struct Content {
 	std::string lhs;
-	int lhsVal;
+	unsigned short lhsVal;
 	std::string rhs;
-	int rhsVal;
+	unsigned short rhsVal;
 	std::string operand;
-};
-
-typedef struct Node {
-	int operand;
-	Node* rhs;
-	Node* lhs;
-	int val;
+	bool valueFind;
+	unsigned short value;
 };
 
 typedef std::map<std::string, Content> Entries;
 
-class LittleTree {
-
-	int _part;
-	Node* _first;
-
-	Node* _newNode(const std::string& operand) {
-		Node* newOne = new Node();
-		newOne->lhs = nullptr;
-		newOne->rhs = nullptr;
-		newOne->val = 0;
-		if (operand == "AND")
-			newOne->operand = AND;
-		else if (operand == "OR")
-			newOne->operand = OR;
-		else if (operand == "LSHIFT")
-			newOne->operand = LSHIFT;
-		else if (operand == "RSHIFT")
-			newOne->operand = RSHIFT;
-		else if (operand == "EQUAL")
-			newOne->operand = EQUAL;
-		else if (operand == "NOT")
-			newOne->operand = NOT;
-		return newOne;
-	}
-
-	Node* _newNode(int val) {
-		Node* leaf = new Node();
-		leaf->lhs = nullptr;
-		leaf->rhs = nullptr;
-		leaf->val = val;
-		leaf->operand = LEAF;
-		return leaf;
-	}
-
-	void _recuBuildTree(Node* current, const Entries& entries, const Content& needs) {
-		std::string lhs = needs.lhs;
-		std::string rhs = needs.rhs;
-		if (!lhs.empty()) {
-			Content CLhs = entries.find(lhs)->second;
-			current->lhs = _newNode(CLhs.operand);
-			_recuBuildTree(current->lhs, entries, CLhs);
-		}
-		else
-			current->lhs = _newNode(needs.lhsVal);
-		if (needs.operand != "EQUAL" && needs.operand != "NOT") {
-			if (!rhs.empty()) {
-				Content CRhs = entries.find(rhs)->second;
-				current->rhs = _newNode(CRhs.operand);
-				_recuBuildTree(current->rhs, entries, CRhs);
-			}
-			else
-				current->rhs = _newNode(needs.rhsVal);
-		}
-	}
-
-	void _recuBurnTree(Node* fiouf) {
-		_recuBurnTree(fiouf->lhs);
-		_recuBurnTree(fiouf->rhs);
-		free(fiouf);
-		fiouf = nullptr;
-	}
-
-	void _burnTree() {
-		_recuBurnTree(_first->lhs);
-		_recuBurnTree(_first->rhs);
-		free(_first);
-		_first = nullptr;
-	}
-
-	int _letRecuResultPartOne(Node* current) {
-		switch (current->operand) {
-		case LEAF:
-			return current->val;
-		case EQUAL:
-			return _letRecuResultPartOne(current->lhs);
-		case NOT:
-			return ~_letRecuResultPartOne(current->lhs);
-		case OR:
-			return (_letRecuResultPartOne(current->lhs) | _letRecuResultPartOne(current->rhs));
-		case AND:
-			return (_letRecuResultPartOne(current->lhs) & _letRecuResultPartOne(current->rhs));
-		case LSHIFT:
-			return (_letRecuResultPartOne(current->lhs) << _letRecuResultPartOne(current->rhs));
-		case RSHIFT:
-			return (_letRecuResultPartOne(current->lhs) >> _letRecuResultPartOne(current->lhs));
-		}
-	}
-
-public :
-
-	LittleTree(int part, const Entries& entries) : _part(part), _first(nullptr) {
-		if (part == 1) {
-			Content start = entries.find("a")->second;
-			_first = _newNode(start.operand);
-			_recuBuildTree(_first, entries, start);
-		}
-		else {
-
-		}
-	}
-
-	int gemmeResult() {
-		if (_part == 1) {
-			return (_letRecuResultPartOne(_first));
-		}
-		else {
-
-		}
-	}
-
-};
-
 bool isDigit(char c) {
 	return (c >= '0' && c <= '9');
+}
+
+void resetMap(Entries& ent) {
+	for (Entries::iterator it = ent.begin(); it != ent.end(); ++it) {
+		it->second.value = 0;
+		it->second.valueFind = false;
+	}
 }
 
 void parseLine(const std::string &line, Entries& entries) {
 	int count = 1;
 	bool endParse = false;
 	std::string key;
-	Content content = { "", 0, "", 0, "" };
+	Content content = { "", 0, "", 0, "", false, 0 };
 	std::string::size_type idxStart = 0;
 	std::string::size_type idxEnd = line.find(' ');
 	if (idxEnd == std::string::npos)
@@ -190,6 +81,73 @@ void parseLine(const std::string &line, Entries& entries) {
 	entries.insert(std::make_pair(key, content));
 }
 
+unsigned short getValueRecursive(Content& cont, Entries& ent) {
+	std::string op = cont.operand;
+	if (cont.valueFind)
+		return cont.value;
+	cont.valueFind = true;
+	if (cont.lhs.empty() && cont.rhs.empty()) {
+		if (op == "EQUAL")
+			cont.value = cont.lhsVal;
+		else if (op == "NOT")
+			cont.value = ~cont.lhsVal;
+		else if (op == "AND")
+			cont.value = cont.lhsVal & cont.rhsVal;
+		else if (op == "OR")
+			cont.value = cont.lhsVal | cont.rhsVal;
+		else if (op == "RSHIFT")
+			cont.value = cont.lhsVal >> cont.rhsVal;
+		else if (op == "LSHIFT")
+			cont.value = cont.lhsVal << cont.rhsVal;
+		return cont.value;
+	}
+	if (cont.lhs.empty()) {
+		if (op == "AND")
+			cont.value = cont.lhsVal & getValueRecursive(ent.find(cont.rhs)->second, ent);
+		else if (op == "OR")
+			cont.value = cont.lhsVal | getValueRecursive(ent.find(cont.rhs)->second, ent);
+		else if (op == "RSHIFT")
+			cont.value = cont.lhsVal >> getValueRecursive(ent.find(cont.rhs)->second, ent);
+		else if (op == "LSHIFT")
+			cont.value = cont.lhsVal << getValueRecursive(ent.find(cont.rhs)->second, ent);
+		return cont.value;
+	}
+	if (cont.rhs.empty()) {
+		if (op == "EQUAL")
+			cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent);
+		else if (op == "NOT")
+			cont.value = ~getValueRecursive(ent.find(cont.lhs)->second, ent);
+		else if (op == "AND")
+			cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) & cont.rhsVal;
+		else if (op == "OR")
+			cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) | cont.rhsVal;
+		else if (op == "RSHIFT")
+		{
+			if (cont.rhsVal >= 16)
+				cont.value = 0;
+			else
+				cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) >> cont.rhsVal;
+		}
+		else if (op == "LSHIFT")
+		{
+			if (cont.lhsVal >= 16)
+				cont.value = 0;
+			else
+				cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) << cont.rhsVal;
+		}
+		return cont.value;
+	}
+	if (op == "AND")
+		cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) & getValueRecursive(ent.find(cont.rhs)->second, ent);
+	else if (op == "OR")
+		cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) | getValueRecursive(ent.find(cont.rhs)->second, ent);
+	else if (op == "RSHIFT")
+		cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) >> getValueRecursive(ent.find(cont.rhs)->second, ent);
+	else if (op == "LSHIFT")
+		cont.value = getValueRecursive(ent.find(cont.lhs)->second, ent) << getValueRecursive(ent.find(cont.rhs)->second, ent);
+	return cont.value;
+}
+
 int main()
 {
 	std::ifstream input("./Input.txt");
@@ -206,8 +164,14 @@ int main()
 		std::getline(input, line);
 		parseLine(line, entries);
 	}
-	LittleTree poney(part, entries);
-	std::cout << "result : " << poney.gemmeResult() << std::endl;
+	unsigned short a = getValueRecursive(entries.find("a")->second, entries);
+	if (part != 1) {
+		resetMap(entries);
+		entries.find("b")->second.lhsVal = a;
+		a = getValueRecursive(entries.find("a")->second, entries);
+	}
+	std::cout << "Result is " << a << std::endl;
+	return 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
