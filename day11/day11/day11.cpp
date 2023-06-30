@@ -79,9 +79,17 @@ std::ostream& operator<<(std::ostream& o, const Password& p) {
 int main()
 {
 	Password pass("cqjxjnds");
+	int part = 1;
+	std::cout << "Which part ? (1 or 2)\n";
+	std::cin >> part;
 	++pass;
 	while (!pass.ok()) {
 		++pass;
+	}
+	if (part != 1) {
+		++pass;
+		while (!pass.ok())
+			++pass;
 	}
 	std::cout << "new pass is " << pass << std::endl;
 	return 0;
