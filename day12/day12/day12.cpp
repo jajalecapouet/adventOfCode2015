@@ -5,54 +5,53 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <map>
-
-typedef std::pair<int, bool> Scope; //int for sum in scope, bool to tell if it was closed
-typedef std::pair<int, int> KeyScope; //lhs int for depth, rhs int for the n'th scope in the depht
-typedef std::map<KeyScope, Scope> ScopeMap;
 
 bool isRed(const std::string& str, std::string::size_type idx) {
 	return (!str.compare(idx, 3, "red"));
 }
 
-void parseLinePart2(const std::string& str, std::string::size_type& idx, int& sum) {
+int parseLinePart2(const std::string& str, std::string::size_type& idx) {
 	int psum = 0;
 	bool ignore = false;
-	int ignoreDepth = 0;
-	while (str[idx] != '}' && idx < str.size()) {
-		if (str[idx] == '{')
-			parseLinePart2(str, ++idx, sum);
-		if (!ignore && isRed(str, idx)) {
-			int depthScope = 1;
+	std::string::size_type ignoreDepth = 0;
+	while (idx < str.size()) {
+		if (str[idx] == '}') {
+			return psum;
+		}
+		else if (str[idx] == '{')
+			psum += parseLinePart2(str, ++idx);
+		else if (!ignore && isRed(str, idx)) {
+			std::string::size_type depthScope = 1;
 			while (depthScope) {
-				if (str[++idx] == '{')
+				++idx;
+				if (str[idx] == '{')
 					++depthScope;
 				else if (str[idx] == '}')
 					--depthScope;
 			}
-			++idx;
-			return;
+			return 0;
 		}
-		if (str[idx] == '[') {
+		else if (str[idx] == '[') {
 			++ignoreDepth;
 			ignore = true;
 		}
 		else if (str[idx] == ']') {
+			if (!ignore)
+				throw(std::invalid_argument("bad parsing or bad file format.\n"));
 			--ignoreDepth;
 			if (!ignoreDepth)
 				ignore = false;
-			//if (ignoreDepth < 0)
-			//	throw(std::invalid_argument("euuuuuh ???\n"));
 		}
 		else if ((isdigit(str[idx]) || str[idx] == '-')) {
-			psum += atoi(&str.c_str()[idx]);
-			while (isdigit(str[++idx]));
-			--idx;
+			int bug = atoi(&str.c_str()[idx]);
+			psum += bug;
+			while (isdigit(str[idx + 1]))
+				++idx;
+
 		}
 		++idx;
 	}
-	sum += psum;
-	++idx;
+	return psum;
 }
 
 int parseLine(const std::string& str) {
@@ -87,7 +86,7 @@ int main()
 			sum += parseLine(line);
 		else {
 			std::string::size_type algoIdx = 0;
-			parseLinePart2(line, algoIdx, sum);
+			sum = parseLinePart2(line, algoIdx);
 		}
 	}
 	std::cout << "result is " << sum << std::endl;
