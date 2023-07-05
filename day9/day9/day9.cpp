@@ -117,11 +117,10 @@ public :
 	
 	void _dfs2(unsigned int score, unsigned int& bestScore, const LNode& node, LVisited& v, const LNodes& data) {
 		if (_allLVisited(v)) {
-			//if (score > bestScore)
 			bestScore = score;
 			return;
 		}
-		if (score + _possibleMax(v) - 10000 <= bestScore)
+		if (score + _possibleMax(v) - node.begin()->first <= bestScore)
 			return;
 		for (Node::const_iterator cit = node.begin(); cit != node.end(); ++cit) {
 			for (std::set<std::string>::const_iterator cit2 = cit->second.begin(); cit2 != cit->second.end(); ++cit2) {
