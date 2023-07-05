@@ -121,7 +121,7 @@ public :
 			bestScore = score;
 			return;
 		}
-		if (score + _possibleMax(v) - 20 <= bestScore)
+		if (score + _possibleMax(v) - 10000 <= bestScore)
 			return;
 		for (Node::const_iterator cit = node.begin(); cit != node.end(); ++cit) {
 			for (std::set<std::string>::const_iterator cit2 = cit->second.begin(); cit2 != cit->second.end(); ++cit2) {

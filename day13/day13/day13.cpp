@@ -7,6 +7,8 @@
 #include <map>
 #include <set>
 
+
+//dfs tools
 typedef std::map<std::string, std::pair<bool, int> > Visited;
 typedef std::map<int, std::set<std::string>, std::greater<int> > Node;
 typedef std::map<std::string, int> P;
@@ -19,6 +21,30 @@ class Sim {
 	Data _data;
 	PreData _predata;
 	Visited _v;
+
+	bool _allVisited(const Visited& v) {
+		for (Visited::const_iterator cit = v.begin(); cit != v.end(); ++cit) {
+			if (!cit->second.first)
+				return false;
+		}
+		return true;
+	}
+
+	int _possibleMax(const Visited& v, const P& first) {
+		int val = 0;
+		for (Visited::const_iterator cit = v.begin(); cit != v.end(); ++cit) {
+			if (!cit->second.first)
+				val += cit->second.second;
+		}
+		int firstMax = -1000;
+		for (P::const_iterator cit = first.begin(); cit != first.end(); ++cit) {
+			if (v.find(cit->first) != v.end() & cit->second > firstMax)
+				firstMax = cit->second;
+		}
+		if (firstMax == -1000)
+			throw(std::invalid_argument("bad implementation\n"));
+		return val + firstMax;
+	}
 
 public :
 
@@ -68,6 +94,16 @@ public :
 	}
 
 	void endParsing() {
+		if (_part != 1) {
+			for (PreData::iterator it = _predata.begin(); it != _predata.end(); ++it) {
+				it->second.insert(std::make_pair("Me", 0));
+			}
+			PreData::iterator inserted = _predata.insert(std::make_pair("Me", P())).first;
+			for (Visited::const_iterator cit = _v.begin(); cit != _v.end(); ++cit) {
+				inserted->second.insert(std::make_pair(cit->first, 0));
+			}
+			_v.insert(std::make_pair("Me", std::make_pair(false, 0)));
+		}
 		for (PreData::const_iterator it = _predata.begin(); it != _predata.end(); ++it) {
 			Data::iterator itD = _data.insert(std::make_pair(it->first, Node())).first;
 			for (P::const_iterator itP = it->second.begin(); itP != it->second.end(); ++itP) {
@@ -77,8 +113,42 @@ public :
 		}
 	}
 
-	int getResult() {
+	void _dfs(int score, int& bestScore, const Data& data, Visited& v, const Node& current, P& first, std::string justPlaced) {
+		if (_allVisited(v)) {
+			score += first.find(justPlaced)->second;
+			if (score > bestScore)
+				bestScore = score;
+			return;
+		}
+		if (score + _possibleMax(v, first) - current.begin()->first <= bestScore) {
+			return;
+		}
+		for (Node::const_iterator cit = current.begin(); cit != current.end(); ++cit) {
+			for (std::set<std::string>::const_iterator cit2 = cit->second.begin(); cit2 != cit->second.end(); ++cit2) {
+				Visited::iterator found = v.find(*cit2);
+				if (!found->second.first) {
 
+					found->second.first = true;
+					score += cit->first;
+
+					_dfs(score, bestScore, data, v, data.find(*cit2)->second, first, *cit2);
+
+					score -= cit->first;
+					found->second.first = false;
+				}
+			}
+		}
+	}
+
+	int getResult() {
+		int bestScore = 0;
+		P first;
+		Node init;
+		first = _predata.begin()->second;
+		init = _data.begin()->second;;
+		_v.find(_data.begin()->first)->second.first = true;
+		_dfs(0, bestScore, _data, _v, init, first, _predata.begin()->first);
+		return bestScore;
 	}
 };
 
