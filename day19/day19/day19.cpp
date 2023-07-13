@@ -104,7 +104,7 @@ Mols doTheThing(const std::string& str, const Comb& comb) {
     return mols;
 }
 
-void dfs(const std::string& obj, std::string start, const Comb& comb, int depth, int& maxD) {
+void dfs(const std::string& obj, const std::string& start, const Comb& comb, int depth, int& maxD) {
     if (depth >= maxD)
         return;
     if (start == obj) {
@@ -112,9 +112,6 @@ void dfs(const std::string& obj, std::string start, const Comb& comb, int depth,
         maxD = depth;
         return;
     }
-    std::string mol;
-    std::string beginMol;
-    std::string endMol;
     Mols resultThings = doTheThing(start, comb);
     for (std::string res : resultThings) {
         dfs(obj, res, comb, depth + 1, maxD);
