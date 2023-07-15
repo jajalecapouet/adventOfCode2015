@@ -56,13 +56,9 @@ int reducedForm(std::string& str, const Comb& comb) {
 
 bool isBeginOfOther(const std::string& str, const Comb& comb) {
     std::string::size_type idx;
-    std::string debugStr;
-    std::string debugCit;
     for (Comb::const_iterator cit = comb.begin(); cit != comb.end(); ++cit) {
         if (str != cit->first) {
             for (idx = str.size() - 1; idx > 0; --idx) {
-                debugStr = str.substr(idx, str.size() - idx);
-                debugCit = cit->first.substr(0, str.size() - idx);
                 if (!str.compare(idx, str.size() - idx, cit->first, 0, str.size() - idx))
                     return true;
             }
