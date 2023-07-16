@@ -105,9 +105,9 @@ class Sim {
 		int herosDmg = _hero.dm - _boss.ar;
 		int bossDmg = _boss.dm - _hero.ar;
 		if (herosDmg <= 0)
-			return false;
+			herosDmg = 1;
 		if (bossDmg <= 0)
-			return true;
+			bossDmg = 1;
 		int bossTurnsToDie = _boss.pv / (herosDmg);
 		if (_boss.pv % (herosDmg))
 			++bossTurnsToDie;
